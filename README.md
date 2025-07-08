@@ -4,15 +4,17 @@ A modern AI-powered talent hunting application built with FastAPI and Streamlit.
 
 ## Architecture
 
-This application consists of two main components:
+This application consists of three main components:
 
 -   **Backend**: FastAPI application providing REST API endpoints (port 8000)
 -   **Frontend**: Streamlit web interface for user interaction (port 8501)
+-   **Vector Database**: Qdrant vector database for storing and searching embeddings (ports 6333/6334)
 
 ## Tech Stack
 
 -   **Backend**: FastAPI, LangChain, LangGraph
 -   **Frontend**: Streamlit
+-   **Vector Database**: Qdrant
 -   **Package Management**: uv
 -   **Containerization**: Docker, Docker Compose
 -   **Python**: 3.11+
@@ -59,6 +61,8 @@ Choose one of the following setups:
     - Frontend (Streamlit): http://localhost:8501
     - Backend API (FastAPI): http://localhost:8000
     - API Documentation: http://localhost:8000/docs
+    - Qdrant Dashboard: http://localhost:6333/dashboard
+    - Qdrant REST API: http://localhost:6333
 
 4. **Stop the application**
     ```bash
@@ -96,6 +100,7 @@ Choose one of the following setups:
     - Frontend: http://localhost:8501
     - Backend API: http://localhost:8000
     - API Documentation: http://localhost:8000/docs
+    - **Note**: Qdrant is not available in local development mode. Use Docker for full stack testing.
 
 ## Available Make Commands
 
@@ -155,6 +160,84 @@ uv sync --group dev
 uv run pytest
 ```
 
+## Qdrant Vector Database
+
+### Overview
+
+Qdrant is used as the vector database for storing and searching high-dimensional embeddings. It's essential for the AI-powered talent matching capabilities.
+
+### Docker Setup
+
+The Qdrant service is automatically started with the Docker Compose setup:
+
+```bash
+# Start all services including Qdrant
+make run-all
+# or
+docker compose up -d
+```
+
+### Accessing Qdrant
+
+-   **REST API**: http://localhost:6333
+-   **gRPC API**: Port 6334 (for high-performance connections)
+-   **Web Dashboard**: http://localhost:6333/dashboard
+
+### From Your Application
+
+When running in Docker, your backend service can connect to Qdrant using:
+
+```python
+# Python example using qdrant-client
+from qdrant_client import QdrantClient
+
+# Connect from within Docker network
+client = QdrantClient(url="http://qdrant:6333")
+
+# Connect from local development (when Qdrant is running in Docker)
+client = QdrantClient(url="http://localhost:6333")
+```
+
+### Data Persistence
+
+Vector data is persisted in a Docker volume named `qdrant_storage`. This ensures your data survives container restarts.
+
+```bash
+# View Qdrant volume
+docker volume ls | grep qdrant
+
+# Remove Qdrant data (if needed for testing)
+docker volume rm talent-hunter-agent_qdrant_storage
+```
+
+### Common Operations
+
+```bash
+# View Qdrant logs
+docker compose logs qdrant
+
+# Restart only Qdrant
+docker compose restart qdrant
+
+# Connect to Qdrant container
+docker compose exec qdrant /bin/bash
+```
+
+### Troubleshooting
+
+-   **Connection refused**: Ensure Qdrant container is running (`docker compose ps`)
+-   **Data not persisting**: Check if volume is properly mounted (`docker volume ls`)
+-   **Performance issues**: Monitor resources via the Qdrant dashboard
+-   **API errors**: Check Qdrant logs (`docker compose logs qdrant`)
+
+```bash
+# Check Qdrant health
+curl http://localhost:6333/health
+
+# Check Qdrant cluster info
+curl http://localhost:6333/cluster
+```
+
 ## Troubleshooting
 
 ### Port Conflicts
@@ -163,11 +246,14 @@ If you encounter port conflicts:
 
 -   Backend (8000): Check if another service is using port 8000
 -   Frontend (8501): Check if another Streamlit app is running
+-   Qdrant REST API (6333): Check if another Qdrant instance is running
+-   Qdrant gRPC (6334): Check for gRPC service conflicts
 
 ### Docker Issues
 
 -   Ensure Docker daemon is running
 -   Check Docker logs: `docker compose logs`
+-   Check specific service logs: `docker compose logs qdrant`
 -   Rebuild images: `make build-all`
 
 ### Local Development Issues
