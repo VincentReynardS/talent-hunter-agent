@@ -1,0 +1,24 @@
+services:
+    tha-backend:
+        build:
+            context: .
+            dockerfile: Dockerfile.fastapi
+        ports:
+            - '8000:8000'
+        networks:
+            - talent-hunter-network
+
+    tha-frontend:
+        build:
+            context: .
+            dockerfile: Dockerfile.streamlit
+        ports:
+            - '8501:8501'
+        depends_on:
+            - tha-backend
+        networks:
+            - talent-hunter-network
+
+networks:
+    talent-hunter-network:
+        driver: bridge
