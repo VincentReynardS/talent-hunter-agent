@@ -1,14 +1,19 @@
 FROM python:3.11-slim
 
-# Install uv.
+# Install uv
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
-# Copy the application into the container.
-COPY . /app
+# Set working directory
 WORKDIR /app
 
-# Install dependencies
+# Copy dependency files first (for better caching)
+COPY pyproject.toml uv.lock ./
+
+# Install dependencies (this layer will be cached if dependencies don't change)
 RUN uv sync --frozen --no-cache
+
+# Copy only the backend application code
+COPY backend/ ./backend/
 
 EXPOSE 8000
 

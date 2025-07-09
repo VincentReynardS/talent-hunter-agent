@@ -1,0 +1,39 @@
+# Git
+.git
+.gitignore
+
+# Documentation
+README.md
+*.md
+
+# Docker files
+docker-compose.yaml
+Dockerfile.streamlit
+Dockerfile.fastapi
+
+# Development tools
+Makefile
+
+# Virtual environments
+.venv/
+__pycache__/
+.Python
+env/
+venv/
+
+# IDE
+.vscode/
+
+# OS
+.DS_Store
+
+# Kubernetes
+k8s/
+
+# Logs
+*.log
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
