@@ -61,7 +61,7 @@ run-frontend:
 
 # Run all services locally
 run-all:
-	docker compose -f docker-compose.yaml up -d
+	docker compose -f docker-compose.yaml up -d --build
 
 # Stop all services locally
 stop-all:

@@ -7,6 +7,8 @@ services:
             - '8000:8000'
         networks:
             - talent-hunter-network
+        environment:
+            - QDRANT_ENDPOINT=http://qdrant:6333
 
     tha-frontend:
         build:
@@ -18,6 +20,8 @@ services:
             - tha-backend
         networks:
             - talent-hunter-network
+        environment:
+            - API_BASE_URL=http://tha-backend:8000
 
     qdrant:
         image: qdrant/qdrant:latest
