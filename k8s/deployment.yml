@@ -17,3 +17,23 @@ spec:
                   image: australia-southeast2-docker.pkg.dev/talent-hunter-agent/talent-hunter-images/backend:latest
                   ports:
                       - containerPort: 8000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: talent-hunter-frontend
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            app: talent-hunter-frontend
+    template:
+        metadata:
+            labels:
+                app: talent-hunter-frontend
+        spec:
+            containers:
+                - name: talent-hunter-frontend
+                  image: australia-southeast2-docker.pkg.dev/talent-hunter-agent/talent-hunter-images/frontend:latest
+                  ports:
+                      - containerPort: 8501
