@@ -5,10 +5,13 @@ services:
             dockerfile: Dockerfile.fastapi
         ports:
             - '8000:8000'
+        depends_on:
+            - qdrant
         networks:
             - talent-hunter-network
         environment:
             - QDRANT_ENDPOINT=http://qdrant:6333
+            - OPENAI_API_KEY=${OPENAI_API_KEY}
 
     tha-frontend:
         build:
