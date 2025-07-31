@@ -1,4 +1,5 @@
 # Importing necessary libraries
+from langchain import hub as prompts
 from langchain.chat_models import init_chat_model
 from langchain_core.tools import tool
 from langchain_core.runnables import RunnableConfig
@@ -9,8 +10,12 @@ from langgraph.prebuilt import ToolNode, tools_condition
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import START, END, MessagesState, StateGraph
 
-from ..config import settings
 from .tools.vector_store import vector_store
+
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 @tool
 def upsert_candidate(name: str, email: str, resume: str):
@@ -72,41 +77,15 @@ tool_node = ToolNode(tools)
 # Bind tools to the LLM
 model_with_tool = model.bind_tools(tools)
 
-system_prompt = """
-You are a helpful talent hunter that helps job seekers find their dream jobs.
-You are given a job seeker's query and you need to find the best job for them.
-Additionally, you also help companies find the best candidates for their jobs.
-
-You have access to the following tools:
-- insert_candidate: to insert a candidate into the vector database
-- search_candidate: to search for a candidate in the vector database
-- insert_company: to insert a company into the vector database
-- search_company: to search for a company in the vector database
-
-You need to use the tools to find the best job for the job seeker.
-You need to use the tools to find the best candidates for the company.
-
-The tools may require some information to be inserted into the vector database.
-You need to ask the job seeker for the information if the tools require it.
-
-Sometimes, the job that a job seeker is looking for is not available in the vector database.
-In this case, just inform the job seeker that the job is not available and ask them to come back later.
-
-Likewise, if a suitable candidate is not available for a company, just inform the company that the candidate is not available and ask them to come back later.
-"""
-
-# Create a prompt template
-prompt_template = ChatPromptTemplate.from_messages([
-    ("system", system_prompt),
-    ("user", "{input}")
-])
+# Pull the prompt template from the hub
+prompt_template = prompts.pull("tha-prompt:latest", api_key=os.getenv("LANGCHAIN_API_KEY"))
 
 # Create a model with tools
-llm_chain = prompt_template | model_with_tool
+llm_chain = (prompt_template | model_with_tool)
 
 # Create a function to call the model
 def call_model(state: MessagesState, config: RunnableConfig):
-    response = llm_chain.invoke({"input": state["messages"]})
+    response = llm_chain.invoke(state, config=config)
     return {"messages": response}
 
 # Create memory saver(memory)

@@ -1,4 +1,4 @@
-import os
+import json
 import hashlib
 from qdrant_client import QdrantClient
 from qdrant_client.models import PointStruct, Distance, VectorParams
@@ -51,7 +51,13 @@ class VectorStore:
                 "name": candidate_name,
                 "email": email,
             },
-            "content": resume
+            "content": json.dumps(
+                {
+                    "resume": resume,
+                    "email": email,
+                    "name": candidate_name
+                }
+            )
         }
 
         vector = self._embed_document(resume)

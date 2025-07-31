@@ -9,6 +9,7 @@ from .agent.agent import graph
 
 from langchain_core.runnables import RunnableConfig
 from pydantic import BaseModel
+from langchain_core.messages import HumanMessage, AIMessage
 
 class Message(BaseModel):
     role: str  # 'human', 'ai', etc.
@@ -16,7 +17,8 @@ class Message(BaseModel):
 
 class AgentRequest(BaseModel):
     messages: List[Message]
-    user_id: str = "user_123"
+    user_id: str = "0"
+    user_name: str = "Anonymous"
     thread_id: str = "conversation_1"
     temperature: float = 0.0
 
@@ -41,24 +43,33 @@ app = FastAPI(lifespan=lifespan)
 def get_vector_store() -> VectorStore:
     return app.state.vector_store
 
-@app.get("/healthcheck")
-def healthcheck():
-    return {"message": "OK"}
+def create_config(user_id: str, thread_id: str, temperature: float = 0.0) -> RunnableConfig:
+    # Create a composite thread ID
+    composite_thread_id = f"user_{user_id}_{thread_id}"
 
-async def generate_response(messages: List[Tuple[str, str]], user_id: str, thread_id: str, temperature: float) -> AsyncGenerator[str, None]:
-    config = RunnableConfig(
+    return RunnableConfig(
         configurable={
-            "thread_id": thread_id,
+            "thread_id": composite_thread_id,
             "user_id": user_id,
             "temperature": temperature,
         },
         recursion_limit=25
     )
 
+async def generate_response(messages: List[Tuple[str, str]],
+                            user_id: str,
+                            thread_id: str,
+                            temperature: float) -> AsyncGenerator[str, None]:
+    config = create_config(user_id, thread_id, temperature)
+
     # Invoke the LangGraph agent
     for output, metadata in graph.stream({"messages": messages}, config=config, stream_mode="messages"):
         if hasattr(output, "content") and metadata['langgraph_node'] == 'model':                                           
             yield output.content
+
+@app.get("/healthcheck")
+def healthcheck():
+    return {"message": "OK"}
 
 @app.post("/chat")
 async def chat(request: AgentRequest):
