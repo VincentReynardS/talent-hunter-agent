@@ -17,6 +17,22 @@ spec:
                   image: australia-southeast2-docker.pkg.dev/talent-hunter-agent/talent-hunter-images/backend:latest
                   ports:
                       - containerPort: 8000
+                  env:
+                      - name: OPENAI_API_KEY
+                        valueFrom:
+                            secretKeyRef:
+                                name: talent-hunter-secrets
+                                key: openai-api-key
+                      - name: QDRANT_API_KEY
+                        valueFrom:
+                            secretKeyRef:
+                                name: talent-hunter-secrets
+                                key: qdrant-api-key
+                      - name: QDRANT_ENDPOINT
+                        valueFrom:
+                            secretKeyRef:
+                                name: talent-hunter-secrets
+                                key: qdrant-endpoint
 ---
 apiVersion: apps/v1
 kind: Deployment

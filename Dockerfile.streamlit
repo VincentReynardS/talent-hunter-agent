@@ -10,7 +10,7 @@ WORKDIR /app
 COPY pyproject.toml uv.lock ./
 
 # Install dependencies (this layer will be cached if dependencies don't change)
-RUN uv sync --frozen --no-cache
+RUN uv sync --frozen --no-cache --no-dev
 
 # Copy only the frontend application code
 COPY frontend/ ./frontend/
