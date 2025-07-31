@@ -2,20 +2,28 @@ import streamlit as st
 import requests
 import os
 
-API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000")
+API_BASE_URL = os.getenv("API_BASE_URL", "http://talent-hunter-agent-service")
 
 st.set_page_config(page_title="THA", page_icon="🤖")
 st.title("Talent Hunter Agent")
 
+# Get all query params as a dict-like object
+params = st.query_params
+
+# Access a specific query param
+user_id = params.get("user_id", ["0"])[0]
+user_name = params.get("user_name", ["Anonymous"])
+
 # Initialize chat history (an AI greeting message without a corresponding human prompt)
 if "messages" not in st.session_state:
-    st.session_state.messages = [{"role": "ai", "content": "Hi, how can I help you today?"}]
+    st.session_state.messages = [{"role": "ai", "content": f"Hi {user_name}, how can I help you today?"}]
 
 # Define a helper function to call your API
-def call_api(prompt, temperature=0.7):
+def call_chat_api(prompt, user_id, user_name,temperature=0.7):
     payload = {
         "messages": [{"role": "human", "content": prompt}],
-        "user_id": "user_123",
+        "user_id": user_id,
+        "user_name": user_name,
         "thread_id": "conversation_1",
         "temperature": temperature,
     }
@@ -32,18 +40,6 @@ def call_api(prompt, temperature=0.7):
 for idx, msg in enumerate(st.session_state.messages):
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
-        # # Only show the retry button on AI messages that follow a human message.
-        # if msg["role"] == "ai" and idx > 0 and st.session_state.messages[idx - 1]["role"] == "human":
-        #     if st.button("🔄 Try Again with More Creativity", key=f"retry_{idx}"):
-        #         # Get the human prompt that produced this AI message
-        #         prompt = st.session_state.messages[idx - 1]["content"]
-        #         try:
-        #             new_response = call_api(prompt, temperature=0.9)
-        #         except requests.exceptions.RequestException as e:
-        #             new_response = f"⚠️ API error: {e}"
-        #         # Replace the old AI message with the new one
-        #         st.session_state.messages[idx]["content"] = new_response
-        #         st.rerun()  # Rerun to update the rendered chat
 
 # Chat input block
 if prompt := st.chat_input("Type your message here..."):
@@ -53,7 +49,7 @@ if prompt := st.chat_input("Type your message here..."):
         st.markdown(prompt)
     # Call your API with the user prompt (using the default temperature)
     try:
-        ai_response = call_api(prompt)
+        ai_response = call_chat_api(prompt, user_id, user_name)
     except requests.exceptions.RequestException as e:
         ai_response = f"⚠️ API error: {e}"
     # Append the AI response to the conversation history.
